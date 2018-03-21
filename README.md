@@ -1,11 +1,12 @@
 # usage
 
 ```
+$ go get -u github.com/google/go-github/github
 $ make
 $ ./bin/tentacle-repos login pass
 rei/unit_01
 asuka/unit_02
-$ ./bin/tentacle-commits login pass rei/unit_01
+$ ./bin/tentacle-commits-char-stat login pass rei/unit_01
 "i"  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 5
 "t"  ■■■■■■■■■■■■■■■ 2
 "p"  ■■■■■■■■■■■■■■■ 2

@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
 
 	tentacle "github.com/reinerRubin/gh-char-tentacle"
 )
@@ -21,61 +20,66 @@ func main() {
 	}
 
 	login, pass, repo := args[0], args[1], args[2]
-
-	client, err := tentacle.NewGHClient(login, pass)
-	if err != nil {
+	if err := runApp(login, pass, repo); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func runApp(login, pass, repo string) error {
+	client, err := tentacle.NewGHAuthClient(login, pass)
+	if err != nil {
+		return err
 	}
 
 	statSource, err := tentacle.NewGHCommitsStatSource(client, repo)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	stats := statSource.Source()
-	result := make(chan tentacle.CharStat)
+	mergedStat := make(chan tentacle.CharStat)
 	go func() {
-		result <- tentacle.NewStatMerger(stats).RunMergeStats()
+		mergedStat <- tentacle.NewStatMerger(statSource.StatChannel()).Run()
 	}()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		statSource.Run()
-	}()
+	if err := statSource.Run(); err != nil {
+		return err
+	}
 
-	wg.Wait()
-
-	sortedStat := (<-result).SortedStat()
+	sortedStat := (<-mergedStat).SortedStat()
 
 	if len(sortedStat) == 0 {
-		fmt.Println("something wrong :(")
-		return
+		return fmt.Errorf("cant load stat for %s", repo)
 	}
 
-	fmt.Print(sortedStat.TerminalGraph(terminalWidth()))
+	width, err := terminalWidth()
+	if err != nil {
+		return nil
+	}
+	fmt.Print(sortedStat.TextGraph(width))
+
+	return nil
 }
 
-func terminalWidth() int {
+func terminalWidth() (int, error) {
+	// idk about windows
 	cmd := exec.Command("stty", "size")
 	cmd.Stdin = os.Stdin
 	out, err := cmd.Output()
 
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
 
 	tokens := strings.Split(strings.Trim(string(out), "\n"), " ")
 	if len(tokens) != 2 {
-		log.Fatal(err)
+		return 0, fmt.Errorf("cant determinate console size")
 	}
 
 	widthStr := tokens[1]
 	width, err := strconv.Atoi(widthStr)
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
 
-	return width
+	return width, nil
 }

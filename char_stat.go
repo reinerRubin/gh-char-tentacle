@@ -76,59 +76,35 @@ func (hs CharStat) Merge(b CharStat) {
 func (hs CharStat) SortedStat() SortedStat {
 	sortedStat := make(SortedStat, 0, len(hs))
 
+	// TODO optimize me
 	for char, quantity := range hs {
 		sortedStat = append(sortedStat, &StatItem{
 			Char:     char,
 			Quantity: quantity,
 		})
 	}
-
 	sort.Sort(sortedStat)
 
 	return sortedStat
 }
 
-// StatMerger TBD
-type StatMerger struct {
-	incomeStats <-chan CharStat
-	acc         CharStat
-}
-
-// NewStatMerger TBD
-func NewStatMerger(incomeStats <-chan CharStat) *StatMerger {
-	return &StatMerger{
-		incomeStats: incomeStats,
-		acc:         make(CharStat),
-	}
-}
-
-// RunMergeStats TBD
-func (sm *StatMerger) RunMergeStats() CharStat {
-	for stat := range sm.incomeStats {
-		sm.acc.Merge(stat)
-	}
-
-	return sm.acc
-}
-
-// TerminalGraph TBD
-func (ss SortedStat) TerminalGraph(maxWidth int) string {
+// TextGraph TBD
+func (ss SortedStat) TextGraph(desiredMaxWidth int) string {
+	const charLen = 5
 	var (
-		widthSafyOffset = 5 + 19 // rightpad + maxint64.to_s.size
+		widthSafyOffset = charLen + 19 // charLen + maxint64.to_s.size
 		acc             = ""
-		maxSaftyWidth   = maxWidth - widthSafyOffset
+		maxSaftyWidth   = desiredMaxWidth - widthSafyOffset
 	)
-	if maxSaftyWidth < 0 {
+	if maxSaftyWidth <= 0 {
 		// at least, we have tried
-		maxSaftyWidth = maxWidth
+		maxSaftyWidth = desiredMaxWidth
 	}
-
 	if len(ss) == 0 {
 		return acc
 	}
 
 	biggest := ss[0].Quantity
-
 	count := func(quantity int64) int {
 		w := int(quantity * int64(maxSaftyWidth) / biggest)
 		if w == 0 {
@@ -138,8 +114,7 @@ func (ss SortedStat) TerminalGraph(maxWidth int) string {
 	}
 
 	for _, statItem := range ss {
-		// ■
-		acc += fmt.Sprintf(rightPad(fmt.Sprintf(`%q`, string(statItem.Char)), " ", 5))
+		acc += fmt.Sprintf(rightPad(fmt.Sprintf(`%q`, string(statItem.Char)), " ", charLen))
 		for i := 0; i < count(statItem.Quantity); i++ {
 			acc += "■"
 		}

@@ -22,14 +22,23 @@ func main() {
 	}
 
 	login, pass := args[0], args[1]
-	client, err := tentacle.NewGHClient(login, pass)
-	if err != nil {
+	if err := runApp(login, pass); err != nil {
 		log.Fatal(err)
 	}
 
-	user, _, err := client.Users.Get(context.Background(), "")
-	if err != nil || user.Login == nil {
-		log.Fatal(err)
+}
+
+func runApp(login, pass string) error {
+	client, err := tentacle.NewGHAuthClient(login, pass)
+	if err != nil {
+		return err
+	}
+
+	user, _, err := client.Users.Get(context.TODO(), "")
+	if err != nil {
+		return err
+	} else if user.Login == nil {
+		return fmt.Errorf("cant determinate user login")
 	}
 
 	opt := &github.RepositoryListOptions{
@@ -37,11 +46,10 @@ func main() {
 	}
 
 	for {
-		repos, resp, err := client.Repositories.List(
-			context.Background(),
+		repos, resp, err := client.Repositories.List(context.TODO(),
 			*user.Login, opt)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		for _, repo := range repos {
@@ -54,4 +62,6 @@ func main() {
 
 		opt.Page = resp.NextPage
 	}
+
+	return nil
 }

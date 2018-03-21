@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	commitsPerPage = 200
+	commitsPerPage = 400
 )
 
 // GHCommitsStatSource TBD
@@ -35,13 +35,13 @@ func NewGHCommitsStatSource(client *github.Client, repoFullName string) (*GHComm
 	}, nil
 }
 
-// Source TBD
-func (ss *GHCommitsStatSource) Source() <-chan CharStat {
+// StatChannel TBD
+func (ss *GHCommitsStatSource) StatChannel() <-chan CharStat {
 	return ss.sinkStat
 }
 
 // Run TBD
-func (ss *GHCommitsStatSource) Run() {
+func (ss *GHCommitsStatSource) Run() error {
 	defer close(ss.sinkStat)
 	opt := &github.CommitsListOptions{
 		ListOptions: github.ListOptions{PerPage: commitsPerPage},
@@ -52,7 +52,7 @@ func (ss *GHCommitsStatSource) Run() {
 			context.Background(),
 			ss.repoOwner, ss.repoName, opt)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		for _, commit := range commits {
@@ -69,4 +69,6 @@ func (ss *GHCommitsStatSource) Run() {
 
 		opt.Page = resp.NextPage
 	}
+
+	return nil
 }
