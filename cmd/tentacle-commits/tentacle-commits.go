@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -22,7 +23,7 @@ func main() {
 
 	login, pass, repo := args[0], args[1], args[2]
 
-	client, err := tentacle.NewGHClient(login, pass)
+	client, err := tentacle.NewGHAuthClient(context.TODO(), login, pass)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,6 +35,7 @@ func main() {
 
 	stats := statSource.Source()
 	result := make(chan tentacle.CharStat)
+
 	go func() {
 		result <- tentacle.NewStatMerger(stats).RunMergeStats()
 	}()

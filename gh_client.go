@@ -10,8 +10,8 @@ import (
 	"github.com/google/go-github/github"
 )
 
-// NewGHClient TBD
-func NewGHClient(username, password string) (*github.Client, error) {
+// NewGHAuthClient TBD
+func NewGHAuthClient(ctx context.Context, username, password string) (*github.Client, error) {
 	r := bufio.NewReader(os.Stdin)
 
 	tp := github.BasicAuthTransport{
@@ -20,7 +20,6 @@ func NewGHClient(username, password string) (*github.Client, error) {
 	}
 
 	client := github.NewClient(tp.Client())
-	ctx := context.Background()
 	_, _, err := client.Users.Get(ctx, "")
 
 	if _, ok := err.(*github.TwoFactorAuthError); ok {

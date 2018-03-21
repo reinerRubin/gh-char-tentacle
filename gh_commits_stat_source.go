@@ -49,7 +49,7 @@ func (ss *GHCommitsStatSource) Run() {
 
 	for {
 		commits, resp, err := ss.GHClient.Repositories.ListCommits(
-			context.Background(),
+			context.TODO(),
 			ss.repoOwner, ss.repoName, opt)
 		if err != nil {
 			panic(err)
