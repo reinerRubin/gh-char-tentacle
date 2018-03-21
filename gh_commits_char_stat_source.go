@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/github"
 )
@@ -68,6 +69,10 @@ func (ss *GHCommitsStatSource) Run() error {
 		}
 
 		opt.Page = resp.NextPage
+
+		// https://github.com/google/go-github/issues/431
+		// not the best solution (see rate API) but safety first!
+		time.Sleep(720 * time.Millisecond)
 	}
 
 	return nil
